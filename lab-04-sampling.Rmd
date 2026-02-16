@@ -12,7 +12,7 @@ output:
     code_folding: hide
     df_print: paged
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -73,15 +73,15 @@ glimpse(df)
 
 This dataset uses **Year + Day-of-Year (DOY)**. Month must be derived from a calendar date.
 
-```{r derive_time, echo=TRUE, eval=FALSE}
+```{r derive_time, echo=TRUE, eval=T}
 df <- df %>%
   mutate(
     # TODO: create a Date column from year_local and doy
     # HINT: Jan 1 is DOY = 1, so use (doy - 1) with origin = "YYYY-01-01"
-    date = as.Date(___ - 1, origin = paste0(___, "-01-01")),
+    date = as.Date(doy - 1, origin = paste0(year_local, "-01-01")),
 
     # TODO: create a month column (numeric 1–12 or labeled months)
-    month = month(___, label = TRUE, abbr = TRUE),
+    month = month(date, label = TRUE, abbr = TRUE),
 
     # TODO: make a day/night label using daytime (0/1)
     day_night = if_else(daytime == 1, "Day", "Night")
@@ -89,6 +89,7 @@ df <- df %>%
 
 count(df, month)
 count(df, day_night)
+
 ```
 
 ---
@@ -102,22 +103,22 @@ Examples you can choose from (depending on what you see in the dataset):
 - Energy: `le`
 - Meteorology: `ta`, `ts`, `swc`
 
-```{r choose_response, echo=TRUE, eval=FALSE}
+```{r choose_response, echo=TRUE, eval=T}
 # TODO: choose ONE response variable (a column name as a string)
-response_var <- "gpp"   # replace "gpp" with your choice, e.g. "fc" or "le" or "ta"
+response_var <- "reco"   # replace "gpp" with your choice, e.g. "fc" or "le" or "ta"
 
 # CHECK: print a quick summary
 df %>% summarise(
   n = n(),
-  n_missing = sum(is.na(____)),
-  mean = mean(____, na.rm = TRUE),
-  sd = sd(____, na.rm = TRUE)
+  n_missing = sum(is.na(reco)),
+  mean = mean(ta, na.rm = TRUE),
+  sd = sd(ta, na.rm = TRUE)
 )
 ```
 
 **Prompt (2–3 sentences):** Why did you choose this response variable? What do you expect its seasonality/day–night pattern to be?
 
-> *Write your answer here.*
+> *'TA' is Atmospheric Temperature. I expect that it will increase in summer, decrease in winter, be higher in the middle day, and lower at the end of the night*
 
 ---
 
@@ -130,11 +131,11 @@ Fill in at least **5 variables** from this dataset:
 
 | Variable | Units | Description | Expected sign/seasonality? |
 |----------|-------|-------------|----------------------------|
-|          |       |             |                            |
-|          |       |             |                            |
-|          |       |             |                            |
-|          |       |             |                            |
-|          |       |             |                            |
+|    ta      |  C  |     Atmospheric Temperature      |  summer (+), winter (-)       |
+|    le      |   W m-2   |   latent heat turbulent flux      |   summer (+), winter (-) |
+|    gpp      |  µmolCO2 m-2 s-1   | Gross Primary Productivity  |    summer (+), winter (-) |
+|     fc     |   µmolCO2 m-2 s-1    |Carbon Dioxide (CO2) turbulent flux (no storage correction)| summer (+), winter (-) |
+|     reco     |   µmolCO2 m-2 s-1   |   Ecosystem Respiration    |   summer (+), winter (-)  |
 
 ---
 
@@ -144,47 +145,48 @@ Remember: for this lab, the **population** is the entire 2023 half-hourly time s
 
 ## 2.1 Time series view
 
-```{r plot_time_series, echo=TRUE, eval=FALSE}
+```{r plot_time_series, echo=TRUE, eval=T}
 # GOAL: Visualize seasonality over the year.
 # TODO: pick a y aesthetic using response_var.
 
 df %>%
-  ggplot(aes(x = date, y = ____)) +
+  filter(year_local == 2023, daytime != -9999, doy != -9999) %>%
+  ggplot(aes(x = date, y = reco)) +
   geom_line(alpha = 0.25) +
   theme_classic(base_size = 18) +
   labs(
     x = NULL,
-    y = response_var,
+    y = "Ecosystem Respiration (reco)",
     title = "Population time series (2023)"
   )
 ```
 
 **Prompt (2–3 sentences):** What major patterns do you see? (Seasonal cycle? Daily cycle? Outliers?)
 
-> *Write your answer here.*
+> *In the warmer months (June-September), there is higher ecosystem respiration, and there are more volatile fluxes. In the cooler months (October-May), the respiration is lower, and it is more stable.*
 
 ---
 
 ## 2.2 Population distribution (histogram + density)
 
-```{r pop_distribution, echo=TRUE, eval=FALSE}
+```{r pop_distribution, echo=TRUE, eval=T}
 # GOAL: See the overall distribution of the population.
 # TODO: choose an appropriate number of bins (start with ~50).
 
-ggplot(df, aes(x = ____)) +
-  geom_histogram(bins = ___, alpha = 0.7) +
+ggplot(df, aes(x = reco)) +
+  geom_histogram(bins = 12, alpha = 0.7) +
   theme_classic(base_size = 18) +
-  labs(x = response_var, y = "Count", title = "Population distribution (histogram)")
+  labs(x = "Ecosystem Respiration (reco)", y = "Count", title = "Population distribution (histogram)")
 
-ggplot(df, aes(x = ____)) +
+ggplot(df, aes(x = reco)) +
   geom_density(alpha = 0.7) +
   theme_classic(base_size = 18) +
-  labs(x = response_var, y = "Density", title = "Population distribution (density)")
+  labs(x = "Ecosystem Respiration (reco)", y = "Density", title = "Population distribution (density)")
 ```
 
 **Prompt:** Describe shape (skew, modality), center, and spread.
 
-> *Write your answer here.*
+> *The histogram is right-skewed, and it appears bimodal, with one peak at 2, and the other around 10. The largest number of points occur between 0-5 µmolCO2 m-2 s-1 of Ecosystem Respiration.The spread is from -1 to about 22 units.*
 
 ---
 
@@ -192,10 +194,10 @@ ggplot(df, aes(x = ____)) +
 
 ### By month
 
-```{r pop_by_month, echo=TRUE, eval=FALSE}
+```{r pop_by_month, echo=TRUE, eval=T}
 # TODO: make month appear in a sensible order (it already is an ordered factor if label=TRUE)
 df %>%
-  ggplot(aes(x = month, y = ____)) +
+  ggplot(aes(x = month, y = reco)) +
   geom_boxplot(outlier.alpha = 0.25) +
   theme_classic(base_size = 18) +
   labs(x = NULL, y = response_var, title = "Population by month")
@@ -205,7 +207,7 @@ df %>%
 
 ```{r pop_by_daynight, echo=TRUE, eval=FALSE}
 df %>%
-  ggplot(aes(x = day_night, y = ____)) +
+  ggplot(aes(x = day_night, y = reco)) +
   geom_boxplot(outlier.alpha = 0.25) +
   theme_classic(base_size = 18) +
   labs(x = NULL, y = response_var, title = "Population by day vs night")
@@ -213,7 +215,7 @@ df %>%
 
 **Prompt (3–4 sentences):** Which grouping variable (month or day/night) seems to explain more variability in your response? Why?
 
-> *Write your answer here.*
+> *The monthly grouping variable explains more variability because the change in reco is more extreme.The box plot's IQR range is a lot more dramatic when comparing, for example, January to May. Although day and night reco change, they are less intense than the changes in Ecosystem Respiration Monthly.*
 
 ---
 
@@ -222,8 +224,8 @@ df %>%
 Compute the population mean and SD for your chosen response variable.
 
 ```{r population_params, echo=TRUE, eval=FALSE}
-pop_mean <- mean(df____, na.rm = TRUE)
-pop_sd   <- sd(df____, na.rm = TRUE)
+pop_mean <- mean(df$reco, na.rm = TRUE)
+pop_sd   <- sd(df$reco, na.rm = TRUE)
 
 tibble(
   response_var = response_var,
@@ -242,13 +244,13 @@ tibble(
 set.seed(480)
 
 # TODO: choose a sample size (e.g., 200, 500, 1000)
-n_samp <- ___
+n_samp <- 500
 
 samp <- df %>%
   slice_sample(n = n_samp)
 
-samp_mean <- mean(samp____, na.rm = TRUE)
-samp_sd   <- sd(samp____, na.rm = TRUE)
+samp_mean <- mean(samp$reco, na.rm = TRUE)
+samp_sd   <- sd(samp$reco, na.rm = TRUE)
 
 tibble(
   n_samp = n_samp,
@@ -261,7 +263,7 @@ tibble(
 
 **Prompt (2–3 sentences):** How close is your one-sample estimate to the population mean/SD? Is the difference surprising?
 
-> *Write your answer here.*
+> *The one-sample estimate and the population mean/SD are very very similar. This difference is not suprising, because it shows that the data is likely pretty consistent yearly. There are already a lot of data variables creating the original data set, therefore sampling it many times does not change the results that greatly.*
 
 ---
 
@@ -270,13 +272,13 @@ tibble(
 ```{r sampling_distribution, echo=TRUE, eval=FALSE}
 set.seed(480)
 
-reps <- ___   # TODO: choose number of replicates (e.g., 500 or 1000)
+reps <- 1500   # TODO: choose number of replicates (e.g., 500 or 1000)
 
 means <- replicate(
   reps,
   df %>%
     slice_sample(n = n_samp) %>%
-    summarise(m = mean(____, na.rm = TRUE)) %>%
+    summarise(m = mean(reco, na.rm = TRUE)) %>%
     pull(m)
 )
 
@@ -294,7 +296,7 @@ ggplot(tibble(mean_est = means), aes(mean_est)) +
 
 **Prompt (2–3 sentences):** Is the sampling distribution centered on the population mean? What happens if you increase `n_samp`?
 
-> *Write your answer here.*
+> *Yes, the sampling distribution is centered on the population mean. If you increase the number of samples, there is more flattened out peak that still exists at the center of the population mean. This means that more and more variables are near that sample mean.*
 
 ---
 
@@ -309,15 +311,15 @@ set.seed(480)
 
 # GOAL: sample within each month to ensure seasonal representation.
 # TODO: choose n_per_month so total sample size is reasonable (e.g., 12 * 20 = 240)
-n_per_month <- ___
+n_per_month <- (12 * 30)
 
 samp_strat <- df %>%
   group_by(month) %>%
   slice_sample(n = n_per_month) %>%
   ungroup()
 
-strat_mean <- mean(samp_strat____, na.rm = TRUE)
-strat_sd   <- sd(samp_strat____, na.rm = TRUE)
+strat_mean <- mean(samp_strat$reco, na.rm = TRUE)
+strat_sd   <- sd(samp_strat$reco, na.rm = TRUE)
 
 tibble(
   n_per_month = n_per_month,
@@ -343,7 +345,7 @@ tibble(
 
 **Prompt (3–4 sentences):** Which strategy better approximated the population mean and SD for your response variable? Why might stratification help (or not) here?
 
-> *Write your answer here.*
+> *The SRS better approximated the population mean, because the value compared to population is more similar. Although the sd is lower, that just shows that the values have an even better fit. Stratification helps to ensure representation of each month, however when looking at a huge dataset like the one given, it isn't as important.*
 
 ---
 
@@ -356,7 +358,7 @@ Answer in **4–6 sentences**:
 - In EAES field studies, when is stratification essential?
 - What is one trade-off of stratified sampling?
 
-> *Write your answer here.*
+> *Seasonality matters when looking at environmental data because data values can vary greatly throughout each month. If sampling ignores latent grouping variables, the means and medians can be shifted to favor the groups with larger densities of values. Stratification is essential to properly represent every different group present in the data set, for example this data set is biased towards the summer months if not stratified. One trade-off with the stratified sampling is that it can over-represent certian groups if they are not divied up correctly (every month has a different amount of days, saying every month is 30 days could affect stratified results).*
 
 ---
 
