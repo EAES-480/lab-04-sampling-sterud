@@ -58,7 +58,7 @@ By the end of this lab, you should be able to:
 
 ## Load and inspect
 
-```{r load_data, echo=TRUE, eval=FALSE}
+```{r load_data, echo=TRUE, eval=TRUE}
 df <- read_csv("data/us-ams-simple.csv") %>%
   clean_names() %>% filter(year_local == 2023)
 
@@ -205,7 +205,7 @@ df %>%
 
 ### By day/night
 
-```{r pop_by_daynight, echo=TRUE, eval=FALSE}
+```{r pop_by_daynight, echo=TRUE, eval=TRUE}
 df %>%
   ggplot(aes(x = day_night, y = reco)) +
   geom_boxplot(outlier.alpha = 0.25) +
@@ -223,7 +223,7 @@ df %>%
 
 Compute the population mean and SD for your chosen response variable.
 
-```{r population_params, echo=TRUE, eval=FALSE}
+```{r population_params, echo=TRUE, eval=TRUE}
 pop_mean <- mean(df$reco, na.rm = TRUE)
 pop_sd   <- sd(df$reco, na.rm = TRUE)
 
@@ -240,7 +240,7 @@ tibble(
 
 ## 4.1 One random sample
 
-```{r one_sample, echo=TRUE, eval=FALSE}
+```{r one_sample, echo=TRUE, eval=TRUE}
 set.seed(480)
 
 # TODO: choose a sample size (e.g., 200, 500, 1000)
@@ -269,7 +269,7 @@ tibble(
 
 ## 4.2 Sampling variability: many samples → many means
 
-```{r sampling_distribution, echo=TRUE, eval=FALSE}
+```{r sampling_distribution, echo=TRUE, eval=TRUE}
 set.seed(480)
 
 reps <- 1500   # TODO: choose number of replicates (e.g., 500 or 1000)
@@ -306,7 +306,7 @@ Here you’ll test whether stratification helps when the population has structur
 
 ## 5.1 Stratify by month
 
-```{r strat_by_month, echo=TRUE, eval=FALSE}
+```{r strat_by_month, echo=TRUE, eval=TRUE}
 set.seed(480)
 
 # GOAL: sample within each month to ensure seasonal representation.
@@ -335,7 +335,7 @@ tibble(
 
 ## 5.2 Compare strategies (SRS vs stratified)
 
-```{r compare_sampling, echo=TRUE, eval=FALSE}
+```{r compare_sampling, echo=TRUE, eval=TRUE}
 tibble(
   strategy = c("Population", "SRS", "Stratified by month"),
   mean = c(pop_mean, samp_mean, strat_mean),
@@ -389,10 +389,10 @@ All exercises below should run using the same objects from Part I:
 
 **Risk:** if the variable has strong cycles aligned with the interval, systematic sampling can be biased.
 
-```{r systematic_sampling, echo=TRUE, eval=FALSE}
+```{r systematic_sampling, echo=TRUE, eval=T}
 # GOAL: Create a systematic sample and compare mean/sd to population.
 # TODO: choose an interval k (try 48, 24, 96).
-k <- ___
+k <- 172
 
 sys_samp <- df %>%
   # TODO: keep only non-missing response values
@@ -413,7 +413,7 @@ tibble(
 **Prompt (3–4 sentences):** Did systematic sampling approximate the population mean/SD better or worse than SRS?  
 What cycle (daily or seasonal) might be interacting with your chosen `k`?
 
-> *Write your answer here.*
+> *The systematic sampling did a better job sampling Population Mean, but with a less decent job minimizing standard deviation. I chose a cycle of 172 days, which is the amount of time from January 1st to June 16th, which is the beginning of the year to the start of summer.*
 
 ---
 
@@ -423,12 +423,12 @@ What cycle (daily or seasonal) might be interacting with your chosen `k`?
 
 This mimics EAES logistics: you may only be able to sample on certain days.
 
-```{r cluster_sampling_days, echo=TRUE, eval=FALSE}
+```{r cluster_sampling_days, echo=TRUE, eval=TRUE}
 # GOAL: Sample whole days as clusters, then estimate mean/sd.
 # TODO: choose number of days to sample.
 set.seed(480)
 
-n_days <- ___
+n_days <- 130
 
 days <- df %>%
   distinct(date) %>%
@@ -455,7 +455,7 @@ tibble(
 **Prompt (3–4 sentences):** Why might cluster sampling have **higher variance** than SRS for the same number of measurements?  
 What feature of time series data (hint: autocorrelation) is relevant here?
 
-> *Write your answer here.*
+> *Depending on the cluster frame you select, the variance can fluctuate greatly in the dataset because the points in a certain time frame are more likely to be similar to eachother. For cluster sampling to be accurate, you must choose a cluster of values that is near the mean found in the standard population measurement, or includes a high density of those values. This causes lots of variability. For time series data, autocorrelation is relevant because, as mentioned previously, measurements that are close to each other in time are generally more correlated with one another. *
 
 ---
 
@@ -465,10 +465,10 @@ What feature of time series data (hint: autocorrelation) is relevant here?
 
 This mimics continuous instrumentation that logs at a lower frequency (e.g., hourly instead of 30-min).
 
-```{r quasi_continuous, echo=TRUE, eval=FALSE}
+```{r quasi_continuous, echo=TRUE, eval=TRUE}
 # GOAL: Create a regular subsampled time series.
 # TODO: choose a step size (every 2 records = hourly; every 4 = 2-hourly).
-step <- ___
+step <- 2
 
 qc_samp <- df %>%
   filter(!is.na(.data[[response_var]])) %>%
@@ -487,19 +487,19 @@ tibble(
 
 ### Visual check: does the subsampled series preserve structure?
 
-```{r qc_plot, echo=TRUE, eval=FALSE}
+```{r qc_plot, echo=TRUE, eval=TRUE}
 # TODO: plot BOTH population and qc_samp time series (thin lines) for a short window
 # HINT: filter to one month to avoid overplotting.
 
 df %>%
-  filter(month == ___) %>%   # e.g., "Jul" if month is labeled
+  filter(month == "Jul") %>%   # e.g., "Jul" if month is labeled
   ggplot(aes(x = date, y = .data[[response_var]])) +
   geom_line(alpha = 0.25) +
   theme_classic(base_size = 18) +
   labs(title = "Population time series (subset)", x = NULL, y = response_var)
 
 qc_samp %>%
-  filter(month == ___) %>%
+  filter(month == "Jul") %>%
   ggplot(aes(x = date, y = .data[[response_var]])) +
   geom_line(alpha = 0.6) +
   theme_classic(base_size = 18) +
@@ -509,13 +509,13 @@ qc_samp %>%
 **Prompt (3–4 sentences):** Does quasi-continuous sampling preserve the **seasonal** pattern? The **daily** pattern?  
 In an EAES context, when is quasi-continuous sampling preferable to sparse discrete sampling?
 
-> *Write your answer here.*
+> *Quasi-continuous sampling does not necessarily preserve the 'seasonal' pattern, however it displays a daily pattern within a given month. Quasi-continuous sampling is preferable because you can visualize how a response variable changes from day/night, and the results are more descriptive when taken continuously. Sparse discrete sampling can still display changes in a plot, but less-often the volativity of the variables. Sparse discrete sampling is better used in detecting seasonal variation, not daily.*
 
 ---
 
 ## Exercise 4 — Compare all strategies in one table (and interpret)
 
-```{r compare_all, echo=TRUE, eval=FALSE}
+```{r compare_all, echo=TRUE, eval=TRUE}
 # GOAL: Assemble a comparison table of mean/sd error for each strategy.
 # NOTE: This assumes you created objects: samp, samp_strat, sys_samp, cluster_samp, qc_samp.
 # If your object names differ, update them here.
@@ -547,7 +547,7 @@ bind_rows(
 Explain *why* in terms of (i) seasonal/diurnal structure and (ii) dependence/autocorrelation.  
 If you were designing a real EAES study with limited field days, what hybrid strategy would you propose (e.g., stratified + clustered)?
 
-> *Write your answer here.*
+> *Quasi-continuous sampling gave the best estimate of the population mean because it divides the dataset into small sections that are roughly similar to the standard population mean. It sampled across the whole dataset, and accounts for both diurnal fluctuations as well as seasonal. The cluster(days) sampling has a lower, more preferable SD because of the autocorrelation of linear cluster models which relates similar values amongst specific time frames. This causes less variation within the cluster, but more variation between cluster sets. If I was designing a real EaES study with limited field days, I would propose to stratify the model by seasons, with equal clusters at the hottest and coldest parts of the day for a couple days each month. *
 
 ---
 
