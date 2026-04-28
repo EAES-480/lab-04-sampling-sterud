@@ -26,6 +26,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+> GM GRADE 9.5/10 - Good conceptual understanding and clear writing on seasonality, daily cycles, and sampling strategies. However, there some code issues affected reproducibility and precision.
+
 # Overview
 
 ## What is AmeriFlux?
@@ -119,6 +121,8 @@ df %>% summarise(
 **Prompt (2–3 sentences):** Why did you choose this response variable? What do you expect its seasonality/day–night pattern to be?
 
 > *'TA' is Atmospheric Temperature. I expect that it will increase in summer, decrease in winter, be higher in the middle day, and lower at the end of the night*
+
+> GM: -0.25 You wrote that you chose `'TA'` but then used `reco` in the code and plots. This inconsistency made several sections confusing. Please be consistent with your chosen variable.
 
 ---
 
@@ -360,6 +364,8 @@ Answer in **4–6 sentences**:
 
 > *Seasonality matters when looking at environmental data because data values can vary greatly throughout each month. If sampling ignores latent grouping variables, the means and medians can be shifted to favor the groups with larger densities of values. Stratification is essential to properly represent every different group present in the data set, for example this data set is biased towards the summer months if not stratified. One trade-off with the stratified sampling is that it can over-represent certian groups if they are not divied up correctly (every month has a different amount of days, saying every month is 30 days could affect stratified results).*
 
+> GM: Good points on seasonality, risks of ignoring latent groups, when stratification is essential, and a realistic trade-off.
+
 ---
 
 # Part II — Sampling designs extensions (graded practice)
@@ -457,6 +463,8 @@ What feature of time series data (hint: autocorrelation) is relevant here?
 
 > *Depending on the cluster frame you select, the variance can fluctuate greatly in the dataset because the points in a certain time frame are more likely to be similar to eachother. For cluster sampling to be accurate, you must choose a cluster of values that is near the mean found in the standard population measurement, or includes a high density of those values. This causes lots of variability. For time series data, autocorrelation is relevant because, as mentioned previously, measurements that are close to each other in time are generally more correlated with one another. *
 
+> GM: Good explanation — autocorrelation within days means points in the same cluster are not independent, leading to higher variance.
+
 ---
 
 ## Exercise 3 — Quasi-continuous sampling (fixed schedule time series)
@@ -510,6 +518,8 @@ qc_samp %>%
 In an EAES context, when is quasi-continuous sampling preferable to sparse discrete sampling?
 
 > *Quasi-continuous sampling does not necessarily preserve the 'seasonal' pattern, however it displays a daily pattern within a given month. Quasi-continuous sampling is preferable because you can visualize how a response variable changes from day/night, and the results are more descriptive when taken continuously. Sparse discrete sampling can still display changes in a plot, but less-often the volativity of the variables. Sparse discrete sampling is better used in detecting seasonal variation, not daily.*
+
+> GM: -0.25 Quasi-continuous sampling actually preserves **both** the seasonal and daily patterns well (especially at step=2). It does not only preserve the daily pattern.
 
 ---
 
